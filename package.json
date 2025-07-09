@@ -10,11 +10,12 @@
     "test": "npx nx affected:test",
     "ng-gemini-assistant": "ng serve ng-gemini-assistant --port 4306 --hmr=true ",
     "json-server": "json-server --watch db.json",
+    "init-ng-app": "./init-ng-app.sh",
     "graph": "nx graph",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "storybook": "npx storybook dev -p 6006 -c libs/core-ui-kit/.storybook",
-    "docs:json": "compodoc -p tsconfig.base.json -e json -d ./"
+    "docs:json": "compodoc -p tsconfig.base.json -e json -d ./",
+    "create-ng-app": "npx nx g @nx/angular:application --name=$npm_config_name --routing=true --style=scss --standalone=true"
   },
   "private": true,
   "dependencies": {
