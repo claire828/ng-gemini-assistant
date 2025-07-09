@@ -6,6 +6,12 @@ export interface WeatherParams {
   unit: string;
 }
 
+export interface WeatherResult {
+  location: string;
+  temperature: string;
+}
+
+
 export const currentWeatherToolConfig: FunctionDeclaration = {
   name: "currentWeatherTool",
   description: "Get the current weather in a given location",

@@ -15,7 +15,7 @@ export class AppComponent {
   geminiService = inject(GeminiService);
   constructor() {
 
-    from(this.geminiService.generateContent('Why the sky is blue? answer in 3 sentences')).subscribe(
+    from(this.geminiService.generateContent$('Why the sky is blue? answer in 3 sentences')).subscribe(
       (result) => console.log('Result from Gemini Service:', result));
 
 
