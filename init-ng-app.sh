@@ -132,12 +132,12 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { ApplicationConfig, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { loggingInterceptor } from '../interceptors';
-import { routes } from '${ROUTES_IMPORT}';
+import { appRoutes } from '${ROUTES_IMPORT}';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideExperimentalZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(appRoutes),
     provideHttpClient(withFetch(), withInterceptors([loggingInterceptor])),
   ]
 };
