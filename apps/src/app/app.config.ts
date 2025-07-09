@@ -1,7 +1,13 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { ApplicationConfig, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
+import { loggingInterceptor } from '../interceptors';
+import { appRoutes } from './routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)],
+  providers: [
+    provideExperimentalZonelessChangeDetection(),
+    provideRouter(appRoutes),
+    provideHttpClient(withFetch(), withInterceptors([loggingInterceptor])),
+  ]
 };
