@@ -1,4 +1,5 @@
 import { FunctionDeclaration, Type } from '@google/genai';
+import { Observable, of } from 'rxjs';
 
 
 export interface WeatherParams {
@@ -24,3 +25,11 @@ export const currentWeatherToolConfig: FunctionDeclaration = {
     required: ["location", "unit"],
   },
 };
+
+export function currentWeatherTool(params: WeatherParams): Observable<WeatherResult> {
+  const { location, unit } = params;
+  return of({
+    location,
+    temperature: "25°" + (unit.toLowerCase() === "celsius" ? "C" : "F"),
+  });
+}

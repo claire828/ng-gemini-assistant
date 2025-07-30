@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Content, ContentListUnion, GenerateContentResponse, GoogleGenAI } from '@google/genai';
 import { forkJoin, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../environments/environment';
-import { ToolMap, ToolParams, ToolResult, WeatherParams, WeatherResult } from '../models';
+import { currentWeatherTool, ToolMap, ToolParams, ToolResult } from '../models';
 import { buildContentWithFunctionResponses, buildFunctionResponses, generateContentPayload, hasFunctionCalls } from '../utils/gemini.util';
 
 
@@ -11,7 +11,7 @@ import { buildContentWithFunctionResponses, buildFunctionResponses, generateCont
 export class GeminiService {
   readonly #contentAi = new GoogleGenAI({ apiKey: environment.geminiAPIKey });
   readonly #toolMap: ToolMap = {
-    currentWeatherTool: this.#currentWeatherTool.bind(this)
+    currentWeatherTool: currentWeatherTool.bind(this)
   };
 
 
@@ -55,14 +55,6 @@ export class GeminiService {
       map(finalResponse => finalResponse.text ?? ''),
       tap(finalResponse => console.log('Final AI response:', finalResponse))
     );
-  }
-
-  #currentWeatherTool(params: WeatherParams): Observable<WeatherResult> {
-    const { location, unit } = params;
-    return of({
-      location,
-      temperature: "25°" + (unit.toLowerCase() === "celsius" ? "C" : "F"),
-    });
   }
 
 }
