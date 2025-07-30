@@ -4,7 +4,7 @@ import { Content, ContentListUnion, GenerateContentResponse, GoogleGenAI } from 
 import { forkJoin, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { currentWeatherTool, ToolMap, ToolParams, ToolResult } from '../models';
-import { buildContentWithFunctionResponses, buildFunctionResponses, generateContentPayload, hasFunctionCalls } from '../utils/gemini.util';
+import { buildContentWithFunctionResponses, generateContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils/gemini.util';
 
 
 @Injectable({ providedIn: 'root' })
@@ -16,22 +16,23 @@ export class GeminiService {
 
 
   generateContent$(contents: ContentListUnion): Observable<string> {
-    const config = generateContentPayload(contents);
-    return from(this.#contentAi.models.generateContent(config)).pipe(
+    const contentPayload = generateContentPayload(contents);
+    return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
       switchMap(response => {
         if (!hasFunctionCalls(response)) {
           return of(response.text ?? '');
         }
-        return this.#handleFunctionCalls$(response, contents);
+        return this.#handleFunctionCalls$(contents, response);
       })
     );
   }
 
   #handleFunctionCalls$(
-    response: GenerateContentResponse,
-    originalContents: ContentListUnion
+    originalContents: ContentListUnion,
+    contentResponse: GenerateContentResponse,
   ): Observable<string> {
-    const funcCalls = response.functionCalls ?? [];
+    // prepare internal tool API calls
+    const funcCalls = contentResponse.functionCalls ?? [];
     const functionCall$ = funcCalls.reduce((acc, call) => {
       const toolFn = call?.name && this.#toolMap[call.name as keyof ToolMap];
       if (toolFn && call.args) {
@@ -39,10 +40,12 @@ export class GeminiService {
       }
       return acc;
     }, [] as Observable<ToolResult>[]);
+    // call the internal apis
     return forkJoin(functionCall$).pipe(
       switchMap(results => {
-        const functionResponses = buildFunctionResponses(funcCalls, results);
-        const newContents = buildContentWithFunctionResponses(originalContents, response, functionResponses);
+        // map the results and send to the LLM can process it
+        const functionResponses = mapFunctionResponses(funcCalls, results);
+        const newContents = buildContentWithFunctionResponses(originalContents, contentResponse, functionResponses);
         return this.#generateFinalResponse$(newContents);
       })
     );
@@ -58,8 +61,6 @@ export class GeminiService {
   }
 
 }
-
-
 
 
 

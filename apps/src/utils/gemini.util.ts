@@ -21,12 +21,12 @@ export function generateContentPayload(contents: ContentListUnion) {
 
 
 /**
- * Build function responses from function calls and results.
+ *  Map function responses from function calls and results.
  * @param functionCalls List of function calls.
  * @param results Corresponding tool results.
  * @returns Array of FunctionResponse.
  */
-export function buildFunctionResponses(
+export function mapFunctionResponses(
   functionCalls: FunctionCall[],
   results: ToolResult[]
 ): FunctionResponse[] {
