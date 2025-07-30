@@ -5,7 +5,11 @@
     type="text"
     placeholder="Search..."
   />
-  <button class="m-2 rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
+  <div class="m-2 flex justify-center gap-2">
+    <button class="rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
+    <button class="rounded bg-green-500 p-1" (click)="generateContent(input.value)">search</button>
+  </div>
+
   <p class="whitespace-pre-wrap">{{ $result() }}</p>
 </div>
 

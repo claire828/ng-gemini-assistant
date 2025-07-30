@@ -27,6 +27,14 @@ export class GeminiService {
     );
   }
 
+  searchContent$(contents: ContentListUnion): Observable<string> {
+    const contentPayload = generateContentPayload(contents, false);
+    return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
+      tap(response => console.log('Search response:', response)),
+      map(response => response.text ?? ''),
+    );
+  }
+
   #handleFunctionCalls$(
     originalContents: ContentListUnion,
     contentResponse: GenerateContentResponse,

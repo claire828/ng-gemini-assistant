@@ -14,11 +14,16 @@ export class AppComponent {
   geminiService = inject(GeminiService);
   $result = signal<any>('');
 
-  protected generateContent(contents: string = 'Why the sky is blue? answer in 3 sentences'): void {
+  protected generateContent(contents: string): void {
     from(this.geminiService.generateContent$(contents)).pipe(
       tap(result => this.$result.set(result)),
-    ).subscribe(
-      (result) => console.log('Result from Gemini Service:', result));
+    ).subscribe();
   }
 
+
+  protected searchContent(contents: string): void {
+    from(this.geminiService.searchContent$(contents)).pipe(
+      tap(result => this.$result.set(result)),
+    ).subscribe();
+  }
 }

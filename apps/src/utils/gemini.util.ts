@@ -7,15 +7,16 @@ interface FunctionResponse {
   response: ToolResult;
 }
 
-export function generateContentPayload(contents: ContentListUnion) {
+export function generateContentPayload(contents: ContentListUnion, enableCustomTools = false) {
+  // NOTE: The Gemini API currently does not allow combining function calling (functionDeclarations) with urlContext or googleSearch in a single request.
+  const tools = enableCustomTools ? [{ functionDeclarations: [currentWeatherToolConfig] }] : [
+    { urlContext: {} },
+    { googleSearch: {} }
+  ];
   return {
     model: environment.geminiModel,
     contents,
-    config: {
-      tools: [{
-        functionDeclarations: [currentWeatherToolConfig]
-      }]
-    }
+    config: { tools }
   };
 }
 
