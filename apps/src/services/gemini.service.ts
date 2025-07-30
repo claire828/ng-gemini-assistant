@@ -4,7 +4,7 @@ import { Content, ContentListUnion, GenerateContentResponse, GoogleGenAI } from 
 import { forkJoin, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { currentWeatherTool, ToolMap, ToolParams, ToolResult } from '../models';
-import { buildContentWithFunctionResponses, generateContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils/gemini.util';
+import { buildContentWithFunctionResponses, generateContentPayload, generateUrlContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils/gemini.util';
 
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +28,7 @@ export class GeminiService {
   }
 
   searchContent$(contents: ContentListUnion): Observable<string> {
-    const contentPayload = generateContentPayload(contents, false);
+    const contentPayload = generateUrlContentPayload(contents);
     return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
       tap(response => console.log('Search response:', response)),
       map(response => response.text ?? ''),

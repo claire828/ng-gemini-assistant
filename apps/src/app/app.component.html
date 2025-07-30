@@ -1,13 +1,13 @@
 <div class="flex h-screen flex-col items-center justify-center">
   <input
-    class="border border-1 border-blue-500 text-blue-500"
+    class="w-100 border border-1 border-blue-500 text-blue-500"
     #input
     type="text"
     placeholder="Search..."
   />
   <div class="m-2 flex justify-center gap-2">
     <button class="rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
-    <button class="rounded bg-green-500 p-1" (click)="generateContent(input.value)">search</button>
+    <button class="rounded bg-green-500 p-1" (click)="searchContent(input.value)">search</button>
   </div>
 
   <p class="whitespace-pre-wrap">{{ $result() }}</p>
