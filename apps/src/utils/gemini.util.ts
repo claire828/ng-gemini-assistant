@@ -46,21 +46,21 @@ export function buildContentWithFunctionResponses(
   originalContents: ContentListUnion,
   modelResponse: GenerateContentResponse,
   functionResponses: FunctionResponse[],
-  promptText: string = "請根據上述函數結果提供回應。"
+  promptText: string = "Please generate a response based on the results of the above function calls."
 ): Content[] {
   return [
     ...(Array.isArray(originalContents) ? originalContents : [originalContents]),
+    // {
+    //   role: 'model',
+    //   parts: modelResponse.functionCalls?.map((call: any) => ({
+    //     functionCall: {
+    //       name: call.name,
+    //       args: call.args
+    //     }
+    //   })) ?? []
+    // },
     {
-      role: 'model' as const,
-      parts: modelResponse.functionCalls?.map((call: any) => ({
-        functionCall: {
-          name: call.name,
-          args: call.args
-        }
-      })) ?? []
-    },
-    {
-      role: 'user' as const,
+      role: 'user',
       parts: [
         ...functionResponses.map(resp => ({
           functionResponse: {

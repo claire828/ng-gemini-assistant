@@ -32,13 +32,13 @@ export class GeminiService {
     originalContents: ContentListUnion
   ): Observable<string> {
     const funcCalls = response.functionCalls ?? [];
-    const functionCall$ = funcCalls.reduce<Observable<ToolResult>[]>((acc, call) => {
+    const functionCall$ = funcCalls.reduce((acc, call) => {
       const toolFn = call?.name && this.#toolMap[call.name as keyof ToolMap];
       if (toolFn && call.args) {
         acc.push(toolFn(call.args as unknown as ToolParams));
       }
       return acc;
-    }, []);
+    }, [] as Observable<ToolResult>[]);
     return forkJoin(functionCall$).pipe(
       switchMap(results => {
         const functionResponses = buildFunctionResponses(funcCalls, results);
