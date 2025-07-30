@@ -3,7 +3,7 @@ import { FunctionDeclaration, Type } from '@google/genai';
 
 export interface WeatherParams {
   location: string;
-  unit: string;
+  unit: 'celsius' | 'fahrenheit';
 }
 
 export interface WeatherResult {

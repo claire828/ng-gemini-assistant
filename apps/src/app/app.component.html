@@ -1,2 +1,12 @@
-<app-nx-welcome></app-nx-welcome>
+<div class="flex h-screen flex-col items-center justify-center">
+  <input
+    class="border border-1 border-blue-500 text-blue-500"
+    #input
+    type="text"
+    placeholder="Search..."
+  />
+  <button class="m-2 rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
+  {{ $result() }}
+</div>
+
 <router-outlet></router-outlet>

@@ -1,8 +1,13 @@
-import { ContentListUnion } from "@google/genai";
+import { Content, ContentListUnion, FunctionCall, GenerateContentResponse } from "@google/genai";
 import { environment } from "../environments/environment";
-import { currentWeatherToolConfig } from "../models";
+import { currentWeatherToolConfig, ToolMap, ToolResult } from "../models";
 
-export function generateContentResponse(contents: ContentListUnion) {
+interface FunctionResponse {
+  name: keyof ToolMap;
+  response: ToolResult;
+}
+
+export function generateContentPayload(contents: ContentListUnion) {
   return {
     model: environment.geminiModel,
     contents,
@@ -13,3 +18,72 @@ export function generateContentResponse(contents: ContentListUnion) {
     }
   };
 }
+
+
+/**
+ * Build function responses from function calls and results.
+ * @param functionCalls List of function calls.
+ * @param results Corresponding tool results.
+ * @returns Array of FunctionResponse.
+ */
+export function buildFunctionResponses(
+  functionCalls: FunctionCall[],
+  results: ToolResult[]
+): FunctionResponse[] {
+  return functionCalls?.reduce<FunctionResponse[]>((acc, call, idx) => {
+    const response = results[idx];
+    if (call?.name && response) {
+      acc.push({ name: call.name as keyof ToolMap, response });
+    }
+    return acc;
+  }, []) ?? [];
+}
+
+/**
+ * 建立包含 function responses 的新對話內容
+ */
+export function buildContentWithFunctionResponses(
+  originalContents: ContentListUnion,
+  modelResponse: GenerateContentResponse,
+  functionResponses: FunctionResponse[],
+  promptText: string = "請根據上述函數結果提供回應。"
+): Content[] {
+  return [
+    ...(Array.isArray(originalContents) ? originalContents : [originalContents]),
+    {
+      role: 'model' as const,
+      parts: modelResponse.functionCalls?.map((call: any) => ({
+        functionCall: {
+          name: call.name,
+          args: call.args
+        }
+      })) ?? []
+    },
+    {
+      role: 'user' as const,
+      parts: [
+        ...functionResponses.map(resp => ({
+          functionResponse: {
+            name: resp.name,
+            response: resp.response
+          }
+        })),
+        { text: promptText }
+      ]
+    }
+  ].filter(
+    (item): item is Content =>
+      typeof item === 'object' &&
+      'role' in item &&
+      Array.isArray(item.parts) &&
+      item.parts.length > 0
+  );
+}
+
+/**
+ * 檢查回應是否包含 function calls
+ */
+export function hasFunctionCalls(response: GenerateContentResponse): boolean {
+  return !!(response && response.functionCalls && response.functionCalls.length > 0);
+}
+
