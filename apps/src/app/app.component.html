@@ -6,7 +6,7 @@
     placeholder="Search..."
   />
   <button class="m-2 rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
-  {{ $result() }}
+  <p class="whitespace-pre-wrap">{{ $result() }}</p>
 </div>
 
 <router-outlet></router-outlet>
