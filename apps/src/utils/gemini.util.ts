@@ -13,8 +13,21 @@ export function generateContentPayload(contents: ContentListUnion) {
     model: environment.geminiModel,
     contents,
     config: {
-      tools: [{ functionDeclarations: [currentWeatherToolConfig] }]
+      tools: [{ functionDeclarations: [currentWeatherToolConfig] }],
+      systemInstruction: {
+        parts: [{
+          text: "You are a helpful AI assistant. You can answer general questions about any topic using your knowledge. Additionally, you have access to tools that you should use ONLY when specifically relevant to the user's question. For weather-related questions, use the weather tool. For all other questions, answer directly using your general knowledge."
+        }]
+      }
     }
+  };
+}
+
+export function generateGeneralContentPayload(contents: ContentListUnion) {
+  return {
+    model: environment.geminiModel,
+    contents,
+    config: {} // No tools - for general questions
   };
 }
 
