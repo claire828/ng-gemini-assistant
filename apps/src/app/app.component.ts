@@ -15,13 +15,11 @@ type ContentsType = { type: GeminiType; content: string };
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title = 'ng-gemini-assistant';
-  geminiService = inject(GeminiService);
-  $contents = signal<ContentsType | null>(null);
-
+  #geminiService = inject(GeminiService);
+  #$contents = signal<ContentsType | null>(null);
   $resource = rxResource<string, ContentsType | null>(
     {
-      request: computedWith(this.$contents)
+      request: computedWith(this.#$contents)
         .skip(1)
         .filter(request => request !== null && request.content.trim().length > 0)
         .default(null),
@@ -29,15 +27,13 @@ export class AppComponent {
       loader: (params) => {
         if (params.request === null) return EMPTY;
         const { type, content } = params.request;
-        console.log(`Loading ${type} with content: ${content}`);
-
         switch (type) {
           case 'generate':
-            return this.geminiService.generateContent$(content);
+            return this.#geminiService.generateContent$(content);
           case 'search':
-            return this.geminiService.generateSearch$(content);
+            return this.#geminiService.generateSearch$(content);
           case 'chat':
-            return this.geminiService.generateChat$(content);
+            return this.#geminiService.generateChat$(content);
           default:
             return EMPTY;
         }
@@ -46,6 +42,6 @@ export class AppComponent {
   );
 
   protected executeGemini(type: GeminiType, content: string): void {
-    this.$contents.set({ type, content });
+    this.#$contents.set({ type, content });
   }
 }

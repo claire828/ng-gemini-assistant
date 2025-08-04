@@ -1,73 +1,9 @@
 import { Content, ContentListUnion, FunctionCall, GenerateContentResponse } from "@google/genai";
-import { environment } from "../environments/environment";
-import { currentWeatherToolConfig, ToolMap, ToolResult } from "../models";
+import { ToolMap, ToolResult } from "../models";
 
 interface FunctionResponse {
   name: keyof ToolMap;
   response: ToolResult;
-}
-
-// NOTE: The Gemini API currently does not allow combining function calling (functionDeclarations) with urlContext or googleSearch in a single request.
-export function generateContentPayload(contents: ContentListUnion) {
-  return {
-    model: environment.geminiModel,
-    contents,
-    config: {
-      tools: [{ functionDeclarations: [currentWeatherToolConfig] }],
-      systemInstruction: {
-        parts: [{
-          text: "You are a helpful AI assistant. You can answer general questions about any topic using your knowledge. Additionally, you have access to tools that you should use ONLY when specifically relevant to the user's question. For weather-related questions, use the weather tool. For all other questions, answer directly using your general knowledge."
-        }]
-      }
-    }
-  };
-}
-
-export function generateGeneralContentPayload(contents: ContentListUnion) {
-  return {
-    model: environment.geminiModel,
-    contents,
-    config: {} // No tools - for general questions
-  };
-}
-
-export function generateFollowUpContentPayload(contents: ContentListUnion) {
-  const payload = {
-    model: environment.geminiModel,
-    contents,
-    config: {} // No tools needed for follow-up response
-  };
-  console.log('Follow-up payload:', JSON.stringify(payload, null, 2));
-  return payload;
-}
-
-export function generateUrlContentPayload(contents: ContentListUnion) {
-  return {
-    model: environment.geminiModel,
-    contents,
-    config: {
-      tools: [
-        { urlContext: {} },
-        { googleSearch: {} }
-      ]
-    }
-  };
-}
-
-export function generateChatContentPayload() {
-  return {
-    model: environment.geminiModel,
-    history: [
-      {
-        role: "user",
-        parts: [{ text: "Hello" }],
-      },
-      {
-        role: "model",
-        parts: [{ text: "Great to meet you. What would you like to know?" }],
-      },
-    ],
-  };
 }
 
 
@@ -93,10 +29,10 @@ export function mapFunctionResponses(
 /**
  * Convert a single content item to Content format
  */
-export function convertToContent(item: any): Content {
+export function convertToContent(item: unknown): Content {
   if (typeof item === 'string') {
     return { role: 'user', parts: [{ text: item }] };
-  } else if (typeof item === 'object' && 'role' in item && 'parts' in item) {
+  } else if (!!item && typeof item === 'object' && 'role' in item && 'parts' in item) {
     return item as Content;
   } else {
     return { role: 'user', parts: [item as any] };
@@ -104,7 +40,7 @@ export function convertToContent(item: any): Content {
 }
 
 /**
- * 建立包含 function responses 的新對話內容
+ * Create function responses
  */
 export function buildContentWithFunctionResponses(
   originalContents: ContentListUnion,
@@ -112,8 +48,6 @@ export function buildContentWithFunctionResponses(
   functionResponses: FunctionResponse[],
   promptText: string = "Please generate a response based on the results of the above function calls."
 ): Content[] {
-  console.log('Original contents:', JSON.stringify(originalContents, null, 2));
-
   // Convert ContentListUnion to Content array
   const contentsArray = Array.isArray(originalContents) ? originalContents : [originalContents];
   const contents: Content[] = contentsArray.map(convertToContent);
@@ -146,7 +80,7 @@ export function buildContentWithFunctionResponses(
 }
 
 /**
- * 檢查回應是否包含 function calls
+ * Check whether the response includes any function calls.
  */
 export function hasFunctionCalls(response: GenerateContentResponse): boolean {
   return !!(response && response.functionCalls && response.functionCalls.length > 0);
