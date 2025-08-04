@@ -59,6 +59,7 @@
     "helmet": "^8.1.0",
     "json-server": "^1.0.0-beta.3",
     "ngx-infinite-scroll": "^19.0.0",
+    "ngx-signal-operators": "^0.1.0",
     "postcss-nesting": "^13.0.1",
     "rss-parser": "^3.13.0",
     "rxjs": "^7.8.1",

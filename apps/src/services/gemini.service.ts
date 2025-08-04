@@ -4,16 +4,22 @@ import { Content, ContentListUnion, GenerateContentResponse, GoogleGenAI } from 
 import { forkJoin, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { currentWeatherTool, ToolMap, ToolParams, ToolResult } from '../models';
-import { buildContentWithFunctionResponses, generateContentPayload, generateUrlContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils/gemini.util';
+import { buildContentWithFunctionResponses, generateChatContentPayload, generateContentPayload, generateFollowUpContentPayload, generateUrlContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils/gemini.util';
 
 
 @Injectable({ providedIn: 'root' })
 export class GeminiService {
   readonly #contentAi = new GoogleGenAI({ apiKey: environment.geminiAPIKey });
+  readonly #chatAi = this.#contentAi.chats.create(generateChatContentPayload());
   readonly #toolMap: ToolMap = {
     currentWeatherTool: currentWeatherTool.bind(this)
   };
 
+  generateChat(message: string): Observable<string> {
+    return from(this.#chatAi.sendMessage({
+      message,
+    })).pipe(map((response) => response.text ?? ''), tap((response) => console.log('Chat response:', response)));
+  }
 
   generateContent$(contents: ContentListUnion): Observable<string> {
     const contentPayload = generateContentPayload(contents);
@@ -30,7 +36,6 @@ export class GeminiService {
   searchContent$(contents: ContentListUnion): Observable<string> {
     const contentPayload = generateUrlContentPayload(contents);
     return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
-      tap(response => console.log('Search response:', response)),
       map(response => response.text ?? ''),
     );
   }
@@ -61,28 +66,10 @@ export class GeminiService {
 
 
   #generateFinalResponse$(newContents: Content[]): Observable<string> {
-    const followUpConfig = generateContentPayload(newContents);
+    const followUpConfig = generateFollowUpContentPayload(newContents);
     return from(this.#contentAi.models.generateContent(followUpConfig)).pipe(
       map(finalResponse => finalResponse.text ?? ''),
-      tap(finalResponse => console.log('Final AI response:', finalResponse))
     );
   }
 
 }
-
-
-
-// #generateInternalToolApi(functionCallObservables: Observable<any>[]) {
-//   return forkJoin(functionCallObservables).pipe(
-//     map(results => {
-//       const resultMap: Record<string, ToolMap[keyof ToolMap] extends ToolFunction<any, infer R> ? R : never> = {};
-//       results.forEach((result, index) => {
-//         if (result) {
-//           resultMap[index] = result;
-//         }
-//       });
-//       console.log('Function result:', resultMap);
-//       return resultMap;
-//     })
-//   );
-// }
