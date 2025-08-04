@@ -6,9 +6,15 @@
     placeholder="Search..."
   />
   <div class="m-2 flex justify-center gap-2">
-    <button class="rounded bg-blue-500 p-1" (click)="generateContent(input.value)">enter</button>
-    <button class="rounded bg-green-500 p-1" (click)="generate(input.value)">search</button>
-    <button class="rounded bg-green-500 p-1" (click)="chat(input.value)">chat</button>
+    <button class="rounded bg-blue-500 p-1" (click)="executeGemini('generate', input.value)">
+      enter
+    </button>
+    <button class="rounded bg-green-500 p-1" (click)="executeGemini('search', input.value)">
+      search
+    </button>
+    <button class="rounded bg-green-500 p-1" (click)="executeGemini('chat', input.value)">
+      chat
+    </button>
   </div>
   @let isLoading = $resource.isLoading();
   @if (isLoading) {
@@ -16,8 +22,6 @@
   } @else {
     <p class="whitespace-pre-wrap">{{ $resource.value() }}</p>
   }
-
-  <p class="whitespace-pre-wrap">{{ $result() }}</p>
 </div>
 
 <router-outlet></router-outlet>

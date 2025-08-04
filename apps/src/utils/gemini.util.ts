@@ -78,6 +78,19 @@ export function mapFunctionResponses(
 }
 
 /**
+ * Convert a single content item to Content format
+ */
+export function convertToContent(item: any): Content {
+  if (typeof item === 'string') {
+    return { role: 'user', parts: [{ text: item }] };
+  } else if (typeof item === 'object' && 'role' in item && 'parts' in item) {
+    return item as Content;
+  } else {
+    return { role: 'user', parts: [item as any] };
+  }
+}
+
+/**
  * 建立包含 function responses 的新對話內容
  */
 export function buildContentWithFunctionResponses(
@@ -89,31 +102,8 @@ export function buildContentWithFunctionResponses(
   console.log('Original contents:', JSON.stringify(originalContents, null, 2));
 
   // Convert ContentListUnion to Content array
-  const contents: Content[] = [];
-
-  if (Array.isArray(originalContents)) {
-    originalContents.forEach(item => {
-      if (typeof item === 'string') {
-        contents.push({ role: 'user', parts: [{ text: item }] });
-      } else if (typeof item === 'object' && 'role' in item && 'parts' in item) {
-        contents.push(item as Content);
-      } else {
-        // PartUnion (Part object)
-        contents.push({ role: 'user', parts: [item as any] });
-      }
-    });
-  } else {
-    if (typeof originalContents === 'string') {
-      contents.push({ role: 'user', parts: [{ text: originalContents }] });
-    } else if (typeof originalContents === 'object' && 'role' in originalContents && 'parts' in originalContents) {
-      contents.push(originalContents as Content);
-    } else {
-      // PartUnion (Part object)
-      contents.push({ role: 'user', parts: [originalContents as any] });
-    }
-  }
-
-  console.log('Converted contents:', JSON.stringify(contents, null, 2));
+  const contentsArray = Array.isArray(originalContents) ? originalContents : [originalContents];
+  const contents: Content[] = contentsArray.map(convertToContent);
 
   // Add the model's function call response
   contents.push({
@@ -139,8 +129,6 @@ export function buildContentWithFunctionResponses(
       { text: promptText }
     ]
   });
-
-  console.log('Final contents:', JSON.stringify(contents, null, 2));
   return contents;
 }
 

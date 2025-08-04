@@ -15,12 +15,6 @@ export class GeminiService {
     currentWeatherTool: currentWeatherTool.bind(this)
   };
 
-  generateChat(message: string): Observable<string> {
-    return from(this.#chatAi.sendMessage({
-      message,
-    })).pipe(map((response) => response.text ?? ''), tap((response) => console.log('Chat response:', response)));
-  }
-
   generateContent$(contents: ContentListUnion): Observable<string> {
     const contentPayload = generateContentPayload(contents);
     return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
@@ -33,11 +27,17 @@ export class GeminiService {
     );
   }
 
-  searchContent$(contents: ContentListUnion): Observable<string> {
+  generateSearch$(contents: ContentListUnion): Observable<string> {
     const contentPayload = generateUrlContentPayload(contents);
     return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
       map(response => response.text ?? ''),
     );
+  }
+
+  generateChat$(message: string): Observable<string> {
+    return from(this.#chatAi.sendMessage({
+      message,
+    })).pipe(map((response) => response.text ?? ''), tap((response) => console.log('Chat response:', response)));
   }
 
   #handleFunctionCalls$(

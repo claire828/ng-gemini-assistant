@@ -2,8 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { computedWith } from 'ngx-signal-operators';
-import { EMPTY, tap } from 'rxjs';
+import { EMPTY } from 'rxjs';
 import { GeminiService } from '../services/gemini.service';
+
+type GeminiType = 'chat' | 'generate' | 'search';
+type ContentsType = { type: GeminiType; content: string };
 
 @Component({
   imports: [RouterModule],
@@ -14,43 +17,35 @@ import { GeminiService } from '../services/gemini.service';
 export class AppComponent {
   title = 'ng-gemini-assistant';
   geminiService = inject(GeminiService);
-  $result = signal<any>('');
-  $contents = signal<string>('');
-  $resource = rxResource<string, string | undefined>(
+  $contents = signal<ContentsType | null>(null);
+
+  $resource = rxResource<string, ContentsType | null>(
     {
       request: computedWith(this.$contents)
         .skip(1)
-        .filter(txt => txt.trim().length > 0)
-        .default(undefined),
+        .filter(request => request !== null && request.content.trim().length > 0)
+        .default(null),
       // in the angular v20, the loader is replaced by stream
       loader: (params) => {
         if (params.request === null) return EMPTY;
-        console.log(`Loading contents: ${params.request}`);
-        return this.geminiService.searchContent$(params.request)
+        const { type, content } = params.request;
+        console.log(`Loading ${type} with content: ${content}`);
+
+        switch (type) {
+          case 'generate':
+            return this.geminiService.generateContent$(content);
+          case 'search':
+            return this.geminiService.generateSearch$(content);
+          case 'chat':
+            return this.geminiService.generateChat$(content);
+          default:
+            return EMPTY;
+        }
       }
     }
-  )
+  );
 
-  protected generate(contents: string): void {
-    this.$contents.set(contents);
-  }
-
-
-  protected generateContent(contents: string): void {
-    this.geminiService.generateContent$(contents).pipe(
-      tap(result => this.$result.set(result)),
-    ).subscribe();
-  }
-
-  protected searchContent(contents: string): void {
-    this.geminiService.searchContent$(contents).pipe(
-      tap(result => this.$result.set(result)),
-    ).subscribe();
-  }
-
-  protected chat(contents: string): void {
-    this.geminiService.generateChat(contents).pipe(
-      tap(result => this.$result.set(result)),
-    ).subscribe();
+  protected executeGemini(type: GeminiType, content: string): void {
+    this.$contents.set({ type, content });
   }
 }
