@@ -7,17 +7,25 @@
       placeholder="Enter your message..."
     />
 
-    <div class="flex items-center space-x-4">
-      <input
-        class="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
-        #imageInput
-        type="file"
-        accept="image/*"
-        (change)="onImageSelected($event)"
-      />
-      @if ($selectedImage()) {
-        <span class="text-sm text-green-600">✓ Image selected</span>
-      }
+    <div class="flex w-full items-center gap-4">
+      <!-- custom styling of file inputs. Label provides semantic accessibility -->
+      <label class="relative flex-1 cursor-pointer">
+        <div
+          class="flex items-center rounded border border-gray-300 py-1 pl-8 text-sm hover:border-gray-400"
+        >
+          <img class="absolute left-2 h-4 w-4" src="assets/folder.svg" alt="Folder icon" />
+          <span>{{ $selectedImage()?.name || 'Choose an image file...' }}</span>
+        </div>
+        <!-- Hidden native file input - sr-only keeps it accessible to screen readers -->
+        <input
+          class="sr-only"
+          #imageInput
+          type="file"
+          accept="image/*"
+          (change)="onImageSelected($event)"
+        />
+      </label>
+
       <button
         class="rounded bg-purple-500 px-3 py-2 text-white hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
         (click)="sendRequest('vision', searchInput.value)"
