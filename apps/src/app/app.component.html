@@ -18,34 +18,37 @@
       @if ($selectedImage()) {
         <span class="text-sm text-green-600">✓ Image selected</span>
       }
+      <button
+        class="rounded bg-purple-500 px-3 py-2 text-white hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+        (click)="sendRequest('vision', searchInput.value)"
+        [disabled]="!$selectedImage()"
+      >
+        Vision
+      </button>
     </div>
   </div>
 
   <div class="m-4 flex justify-center gap-2">
     <button
-      class="rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600"
+      class="rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
       (click)="sendRequest('content', searchInput.value)"
+      [disabled]="$selectedImage()"
     >
       Search
     </button>
     <button
-      class="rounded bg-green-500 px-3 py-2 text-white hover:bg-green-600"
+      class="rounded bg-green-500 px-3 py-2 text-white hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
       (click)="sendRequest('web', searchInput.value)"
+      [disabled]="$selectedImage()"
     >
       Web Search
     </button>
     <button
-      class="rounded bg-pink-500 px-3 py-2 text-white hover:bg-pink-600"
+      class="rounded bg-pink-500 px-3 py-2 text-white hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
       (click)="sendRequest('chat', searchInput.value)"
+      [disabled]="$selectedImage()"
     >
       Chat
-    </button>
-    <button
-      class="rounded bg-purple-500 px-3 py-2 text-white hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
-      (click)="sendRequest('vision', searchInput.value)"
-      [disabled]="!$selectedImage()"
-    >
-      Vision
     </button>
   </div>
 
