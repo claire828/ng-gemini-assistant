@@ -1,11 +1,43 @@
 import { Content, ContentListUnion, FunctionCall, GenerateContentResponse } from "@google/genai";
-import { ToolMap, ToolResult } from "../models";
+import { forkJoin, map, Observable } from "rxjs";
+import { ToolMap, ToolParams, ToolResult } from "../models";
 
 interface FunctionResponse {
   name: keyof ToolMap;
   response: ToolResult;
 }
 
+/**
+ * Execute tool function calls and return observable of function responses
+ */
+export function executeToolFunctionCalls$(
+  toolMap: ToolMap,
+  contentResponse: GenerateContentResponse
+): Observable<FunctionResponse[]> {
+  const toolNameCalls = contentResponse.functionCalls ?? [];
+
+  // Create array of observables with their corresponding function call info
+  const toolCallsWithObservables = toolNameCalls.reduce((acc, call) => {
+    const toolFn = call?.name && toolMap[call.name as keyof ToolMap];
+    if (toolFn && call.args && call.name) {
+      acc.push({
+        name: call.name as keyof ToolMap,
+        observable: toolFn(call.args as unknown as ToolParams)
+      });
+    }
+    return acc;
+  }, [] as Array<{ name: keyof ToolMap; observable: Observable<ToolResult> }>);
+
+  // Execute all tool calls and directly map to FunctionResponse
+  return forkJoin(toolCallsWithObservables.map(item => item.observable)).pipe(
+    map((results: ToolResult[]) => {
+      return toolCallsWithObservables.map((item, idx) => ({
+        name: item.name,
+        response: results[idx]
+      }));
+    })
+  );
+}
 
 /**
  *  Map function responses from function calls and results.

@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import { Injectable } from '@angular/core';
 import { ContentListUnion, GenerateContentResponse, GoogleGenAI } from '@google/genai';
-import { forkJoin, from, map, Observable, of, switchMap } from 'rxjs';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 import { environment } from '../environments/environment';
-import { currentWeatherTool, ToolMap, ToolParams, ToolResult } from '../models';
-import { buildContentWithFunctionResponses, generateChatContentPayload, generateContentPayload, generateUrlContentPayload, hasFunctionCalls, mapFunctionResponses } from '../utils';
+import { currentWeatherTool, ToolMap } from '../models';
+import { buildContentWithFunctionResponses, executeToolFunctionCalls$, generateChatContentPayload, generateContentPayload, generateUrlContentPayload, hasFunctionCalls } from '../utils';
 
 
 @Injectable({ providedIn: 'root' })
@@ -35,30 +35,18 @@ export class GeminiService {
   }
 
   generateChat$(message: string): Observable<string> {
-    return from(this.#chatAi.sendMessage({
-      message,
-    })).pipe(
-      map((response) => response.text ?? ''));
+    return from(this.#chatAi.sendMessage({ message })).pipe(
+      map(response => response.text ?? '')
+    );
   }
+
 
   #handleFunctionCalls$(
     originalContents: ContentListUnion,
     contentResponse: GenerateContentResponse,
   ): Observable<string> {
-    // prepare internal tool API calls
-    const funcCalls = contentResponse.functionCalls ?? [];
-    const functionCall$ = funcCalls.reduce((acc, call) => {
-      const toolFn = call?.name && this.#toolMap[call.name as keyof ToolMap];
-      if (toolFn && call.args) {
-        acc.push(toolFn(call.args as unknown as ToolParams));
-      }
-      return acc;
-    }, [] as Observable<ToolResult>[]);
-    // call the internal apis
-    return forkJoin(functionCall$).pipe(
-      switchMap(results => {
-        // map the results and send to the LLM can process it
-        const functionResponses = mapFunctionResponses(funcCalls, results);
+    return executeToolFunctionCalls$(this.#toolMap, contentResponse).pipe(
+      switchMap(functionResponses => {
         const newContents = buildContentWithFunctionResponses(originalContents, contentResponse, functionResponses);
         return this.generateContent$(newContents);
       })

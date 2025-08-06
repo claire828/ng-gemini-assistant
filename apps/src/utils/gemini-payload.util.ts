@@ -1,5 +1,5 @@
 
-import { ContentListUnion } from "@google/genai";
+import { ContentListUnion, SafetyFilterLevel } from "@google/genai";
 import { environment } from "../environments/environment";
 import { currentWeatherToolConfig } from "../models";
 
@@ -11,6 +11,7 @@ export function generateContentPayload(contents: ContentListUnion) {
     contents,
     config: {
       tools: [{ functionDeclarations: [currentWeatherToolConfig] }],
+      SafetyFilterLevel: SafetyFilterLevel.BLOCK_MEDIUM_AND_ABOVE,
       systemInstruction: {
         parts: [{
           text: "You are a helpful AI assistant. You can answer general questions about any topic using your knowledge. Additionally, you have access to tools that you should use ONLY when specifically relevant to the user's question. For weather-related questions, use the weather tool. For all other questions, answer directly using your general knowledge."
@@ -25,6 +26,7 @@ export function generateUrlContentPayload(contents: ContentListUnion) {
     model: environment.geminiModel,
     contents,
     config: {
+      SafetyFilterLevel: SafetyFilterLevel.BLOCK_MEDIUM_AND_ABOVE,
       tools: [
         { urlContext: {} },
         { googleSearch: {} }
