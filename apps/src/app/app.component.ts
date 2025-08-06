@@ -1,20 +1,12 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, ResourceRef, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, ResourceRef, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { signalMethod } from '@ngrx/signals';
-import { computedWith } from 'ngx-signal-operators';
-import { EMPTY } from 'rxjs';
+import { NEVER } from 'rxjs';
+import { ContentsType, ConversationItem, GeminiType } from '../models';
 import { GeminiService } from '../services/gemini.service';
 import { ConversationMessageComponent } from './components/conversation-message.component';
 
-type GeminiType = 'chat' | 'generate' | 'search';
-type ContentsType = { type: GeminiType; content: string };
-type ConversationItem = {
-  request: string;
-  response: string;
-  type: GeminiType;
-  timestamp: Date;
-};
 type ProcessConversationUpdate = {
   resource: ResourceRef<string | undefined>;
   request: ContentsType | null;
@@ -33,16 +25,19 @@ export class AppComponent {
   protected $conversations = signal<ConversationItem[]>([]);
   #geminiService = inject(GeminiService);
   #$lastProcessedResponse = signal<string>('');
-  // Filter out empty or null content requests
-  #$validRequest = computedWith(this.$currentRequest)
-    .skip(1)
-    .filter((request: ContentsType | null) => request !== null && request.content.trim().length > 0)
-    .default(null);
+  // Filter out empty or null content requests  
+  #$validRequest = computed(() => {
+    const request = this.$currentRequest();
+    return request !== null && request.content.trim().length > 0 ? request : null;
+  });
+
   // Resource to handle content generation requests
   protected $aiResource = rxResource<string, ContentsType | null>({
     params: () => this.#$validRequest(),
     stream: (params) => {
-      if (params.params === null) return EMPTY;
+      if (!params.params) {
+        return NEVER; // Never completes, keeps resource in pending state
+      }
       const { type, content } = params.params;
       switch (type) {
         case 'generate':
@@ -52,13 +47,14 @@ export class AppComponent {
         case 'chat':
           return this.#geminiService.generateChat$(content);
         default:
-          return EMPTY;
+          return this.#geminiService.generateContent$(content);
       }
     }
   });
 
   #processConversation = signalMethod(({ resource, request }: ProcessConversationUpdate) => {
     const currentResponse = (resource.value() ?? "").trim();
+    // Only process when resource is resolved, has a valid request, response, and it's different from last processed
     if (resource.status() !== 'resolved' || !request || !resource.value() || !currentResponse || currentResponse === this.#$lastProcessedResponse()) {
       return;
     }

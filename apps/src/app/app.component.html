@@ -16,7 +16,7 @@
       class="rounded bg-green-500 p-1 hover:bg-green-600"
       (click)="sendRequest('search', searchInput.value)"
     >
-      Advanced Search
+      Web Search
     </button>
     <button
       class="rounded bg-pink-500 p-1 hover:bg-pink-600"
@@ -34,28 +34,28 @@
 
     <!-- Display existing conversations -->
     @for (conversation of $conversations(); track conversation.timestamp) {
-      <app-conversation-item
+      <app-conversation-message
         [type]="conversation.type"
         [request]="conversation.request"
         [response]="conversation.response"
         [timestamp]="conversation.timestamp"
         [isLoading]="false"
       >
-      </app-conversation-item>
+      </app-conversation-message>
     }
 
     <!-- Current loading state (only show when actually loading) -->
     @if ($aiResource.isLoading()) {
       @let currentRequest = $currentRequest();
       @if (currentRequest) {
-        <app-conversation-item
+        <app-conversation-message
           [type]="currentRequest.type"
           [request]="currentRequest.content"
           [response]="$aiResource.value() || 'Thinking...'"
           [timestamp]="null"
           [isLoading]="true"
         >
-        </app-conversation-item>
+        </app-conversation-message>
       }
     }
   </div>

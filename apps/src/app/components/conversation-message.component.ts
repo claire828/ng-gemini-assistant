@@ -1,10 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { GeminiType } from 'apps/src/models';
 
-type ConversationType = 'chat' | 'generate' | 'search';
 
 @Component({
-  selector: 'app-conversation-item',
+  selector: 'app-conversation-message',
   standalone: true,
   imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,7 +43,7 @@ type ConversationType = 'chat' | 'generate' | 'search';
 })
 export class ConversationMessageComponent {
   /** The type of conversation (chat, generate, search) */
-  type = input.required<ConversationType>();
+  type = input.required<GeminiType>();
 
   /** User's request message */
   request = input.required<string>();
