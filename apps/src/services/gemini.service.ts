@@ -35,9 +35,19 @@ export class GeminiService {
   }
 
   generateChat$(message: string): Observable<string> {
-    return from(this.#chatAi.sendMessage({ message })).pipe(
-      map(response => response.text ?? '')
-    );
+    return new Observable<string>(subscriber => {
+      this.#chatAi.sendMessageStream({ message })
+        .then(async stream => {
+          let fullResponse = '';
+          for await (const chunk of stream) {
+            const chunkText = chunk.text ?? '';
+            fullResponse += chunkText;
+            subscriber.next(fullResponse);
+          }
+          subscriber.complete();
+        })
+        .catch(error => subscriber.error(error));
+    });
   }
 
 
