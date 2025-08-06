@@ -1,26 +1,26 @@
 <div class="flex h-screen flex-col items-center justify-center">
   <input
-    class="w-100 border border-1 border-blue-500 text-blue-500"
-    #input
+    class="w-100 border border-1 border-blue-500 px-2 text-blue-500"
+    #searchInput
     type="text"
     placeholder="Search..."
   />
   <div class="m-2 flex justify-center gap-2">
     <button
       class="rounded bg-blue-500 p-1 hover:bg-blue-600"
-      (click)="executeGemini('generate', input.value)"
+      (click)="sendRequest('generate', searchInput.value)"
     >
       Search
     </button>
     <button
       class="rounded bg-green-500 p-1 hover:bg-green-600"
-      (click)="executeGemini('search', input.value)"
+      (click)="sendRequest('search', searchInput.value)"
     >
       Advanced Search
     </button>
     <button
       class="rounded bg-pink-500 p-1 hover:bg-pink-600"
-      (click)="executeGemini('chat', input.value)"
+      (click)="sendRequest('chat', searchInput.value)"
     >
       Chat
     </button>
@@ -28,52 +28,34 @@
 
   <!-- Conversation History -->
   <div class="max-h-96 w-full max-w-4xl overflow-y-auto rounded border border-gray-300 p-4">
-    @if ($conversations().length === 0 && !$resource.isLoading()) {
+    @if ($conversations().length === 0 && !$aiResource.isLoading()) {
       <p class="text-center text-gray-500">Start a conversation...</p>
-    } @else {
-      @for (conversation of $conversations(); track conversation.timestamp) {
-        <div class="mb-4 border-b border-gray-200 pb-4 last:border-b-0">
-          <!-- Request -->
-          <div class="mb-2">
-            <span
-              class="inline-block rounded bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800"
-            >
-              {{ conversation.type.toUpperCase() }}
-            </span>
-            <span class="ml-2 text-sm text-gray-500">
-              {{ conversation.timestamp | date: 'short' }}
-            </span>
-          </div>
-          <div class="mb-2 rounded bg-gray-50 p-3">
-            <strong>You:</strong> {{ conversation.request }}
-          </div>
+    }
 
-          <!-- Response -->
-          <div class="rounded bg-blue-50 p-3">
-            <strong>AI:</strong>
-            <span class="whitespace-pre-wrap">{{ conversation.response }}</span>
-          </div>
-        </div>
-      }
+    <!-- Display existing conversations -->
+    @for (conversation of $conversations(); track conversation.timestamp) {
+      <app-conversation-item
+        [type]="conversation.type"
+        [request]="conversation.request"
+        [response]="conversation.response"
+        [timestamp]="conversation.timestamp"
+        [isLoading]="false"
+      >
+      </app-conversation-item>
+    }
 
-      <!-- Current loading state -->
-      @if ($resource.isLoading()) {
-        <div class="mb-4 border-b border-gray-200 pb-4">
-          <div class="mb-2">
-            <span
-              class="inline-block rounded bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800"
-            >
-              PROCESSING...
-            </span>
-          </div>
-          <div class="mb-2 rounded bg-gray-50 p-3">
-            <strong>You:</strong> {{ $requestSignal()?.content }}
-          </div>
-          <div class="rounded bg-blue-50 p-3">
-            <strong>AI:</strong>
-            <span class="whitespace-pre-wrap">{{ $resource.value() || 'Thinking...' }}</span>
-          </div>
-        </div>
+    <!-- Current loading state (only show when actually loading) -->
+    @if ($aiResource.isLoading()) {
+      @let currentRequest = $currentRequest();
+      @if (currentRequest) {
+        <app-conversation-item
+          [type]="currentRequest.type"
+          [request]="currentRequest.content"
+          [response]="$aiResource.value() || 'Thinking...'"
+          [timestamp]="null"
+          [isLoading]="true"
+        >
+        </app-conversation-item>
       }
     }
   </div>
