@@ -6,19 +6,28 @@
     placeholder="Search..."
   />
   <div class="m-2 flex justify-center gap-2">
-    <button class="rounded bg-blue-500 p-1" (click)="executeGemini('generate', input.value)">
-      enter
+    <button
+      class="rounded bg-blue-500 p-1 hover:bg-blue-600"
+      (click)="executeGemini('generate', input.value)"
+    >
+      Search
     </button>
-    <button class="rounded bg-green-500 p-1" (click)="executeGemini('search', input.value)">
-      search
+    <button
+      class="rounded bg-green-500 p-1 hover:bg-green-600"
+      (click)="executeGemini('search', input.value)"
+    >
+      Advanced Search
     </button>
-    <button class="rounded bg-green-500 p-1" (click)="executeGemini('chat', input.value)">
-      chat
+    <button
+      class="rounded bg-pink-500 p-1 hover:bg-pink-600"
+      (click)="executeGemini('chat', input.value)"
+    >
+      Chat
     </button>
   </div>
   @let isLoading = $resource.isLoading();
   @if (isLoading) {
-    <p class="whitespace-pre-wrap">searching...</p>
+    <p class="whitespace-pre-wrap">loading...</p>
   } @else {
     <p class="whitespace-pre-wrap">{{ $resource.value() }}</p>
   }

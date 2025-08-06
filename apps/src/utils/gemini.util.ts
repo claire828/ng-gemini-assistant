@@ -8,28 +8,27 @@ interface FunctionResponse {
 }
 
 /**
- * Execute tool function calls and return observable of function responses
+ * Execute tool function calls and return responses
  */
 export function executeToolFunctionCalls$(
   toolMap: ToolMap,
   contentResponse: GenerateContentResponse
 ): Observable<FunctionResponse[]> {
-  const toolNameCalls = contentResponse.functionCalls ?? [];
-
   // Create array of observables with their corresponding function call info
-  const toolCallsWithObservables = toolNameCalls.reduce((acc, call) => {
-    const toolFn = call?.name && toolMap[call.name as keyof ToolMap];
+  const toolCallsWithObservables = (contentResponse.functionCalls ?? []).reduce((acc, call) => {
+    const name = call?.name as keyof ToolMap;
+    const toolFn = call?.name && toolMap[name];
     if (toolFn && call.args && call.name) {
       acc.push({
-        name: call.name as keyof ToolMap,
-        observable: toolFn(call.args as unknown as ToolParams)
+        name,
+        toolReq$: toolFn(call.args as unknown as ToolParams)
       });
     }
     return acc;
-  }, [] as Array<{ name: keyof ToolMap; observable: Observable<ToolResult> }>);
+  }, [] as Array<{ name: keyof ToolMap; toolReq$: Observable<ToolResult> }>);
 
   // Execute all tool calls and directly map to FunctionResponse
-  return forkJoin(toolCallsWithObservables.map(item => item.observable)).pipe(
+  return forkJoin(toolCallsWithObservables.map(item => item.toolReq$)).pipe(
     map((results: ToolResult[]) => {
       return toolCallsWithObservables.map((item, idx) => ({
         name: item.name,
@@ -37,25 +36,6 @@ export function executeToolFunctionCalls$(
       }));
     })
   );
-}
-
-/**
- *  Map function responses from function calls and results.
- * @param functionCalls List of function calls.
- * @param results Corresponding tool results.
- * @returns Array of FunctionResponse.
- */
-export function mapFunctionResponses(
-  functionCalls: FunctionCall[],
-  results: ToolResult[]
-): FunctionResponse[] {
-  return functionCalls?.reduce<FunctionResponse[]>((acc, call, idx) => {
-    const response = results[idx];
-    if (call?.name && response) {
-      acc.push({ name: call.name as keyof ToolMap, response });
-    }
-    return acc;
-  }, []) ?? [];
 }
 
 /**
