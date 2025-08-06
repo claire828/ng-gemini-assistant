@@ -4,7 +4,7 @@ import { ContentListUnion, GenerateContentResponse, GoogleGenAI } from '@google/
 import { from, map, Observable, of, switchMap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { currentWeatherTool, ToolMap } from '../models';
-import { buildContentWithFunctionResponses, executeToolFunctionCalls$, generateChatContentPayload, generateContentPayload, generateUrlContentPayload, hasFunctionCalls } from '../utils';
+import { buildContentWithFunctionResponses, executeToolFunctionCalls$, generateChatContentPayload, generateContentPayload, generateUrlContentPayload, generateVisionContentPayload, hasFunctionCalls } from '../utils';
 
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +47,32 @@ export class GeminiService {
           subscriber.complete();
         })
         .catch(error => subscriber.error(error));
+    });
+  }
+
+  generateVision$(text: string, imageFile: File): Observable<string> {
+    return from(this.#$convertFileToBase64(imageFile)).pipe(
+      switchMap(base64Data => {
+        const contentPayload = generateVisionContentPayload(text, base64Data, imageFile.type);
+        return from(this.#contentAi.models.generateContent(contentPayload)).pipe(
+          map(response => response.text ?? '')
+        );
+      })
+    );
+  }
+
+  #$convertFileToBase64(file: File): Observable<string> {
+    return new Observable<string>(subscriber => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        subscriber.next(base64String);
+        subscriber.complete();
+      };
+      reader.onerror = () => {
+        subscriber.error(new Error('Failed to read file'));
+      };
+      reader.readAsDataURL(file);
     });
   }
 

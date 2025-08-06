@@ -21,14 +21,24 @@ type ProcessConversationUpdate = {
 })
 export class AppComponent {
   private searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
+  private imageInput = viewChild.required<ElementRef<HTMLInputElement>>('imageInput');
   protected $currentRequest = signal<ContentsType | null>(null);
   protected $conversations = signal<ConversationItem[]>([]);
+  protected $selectedImage = signal<File | null>(null);
   #geminiService = inject(GeminiService);
   #$lastProcessedResponse = signal<string>('');
   // Filter out empty or null content requests  
   #$validRequest = computed(() => {
     const request = this.$currentRequest();
-    return request !== null && request.content.trim().length > 0 ? request : null;
+    if (!request) return null;
+
+    // For vision requests, allow empty text if image is present
+    if (request.type === 'vision' && request.image) {
+      return request;
+    }
+
+    // For other requests, require non-empty text
+    return request.content.trim().length > 0 ? request : null;
   });
 
   // Resource to handle content generation requests
@@ -38,14 +48,19 @@ export class AppComponent {
       if (!params.params) {
         return NEVER; // Never completes, keeps resource in pending state
       }
-      const { type, content } = params.params;
+      const { type, content, image } = params.params;
       switch (type) {
-        case 'generate':
+        case 'content':
           return this.#geminiService.generateContent$(content);
-        case 'search':
+        case 'web':
           return this.#geminiService.generateSearch$(content);
         case 'chat':
           return this.#geminiService.generateChat$(content);
+        case 'vision':
+          if (!image) {
+            throw new Error('Image is required for vision requests');
+          }
+          return this.#geminiService.generateVision$(content, image);
         default:
           return this.#geminiService.generateContent$(content);
       }
@@ -62,7 +77,8 @@ export class AppComponent {
       request: request.content,
       response: currentResponse,
       type: request.type,
-      timestamp: new Date()
+      timestamp: new Date(),
+      image: request.image
     });
     this.#$lastProcessedResponse.set(currentResponse);
   });
@@ -95,12 +111,35 @@ export class AppComponent {
   protected sendRequest(type: GeminiType, content: string): void {
     // Reset last processed response for new request
     this.#$lastProcessedResponse.set('');
-    this.$currentRequest.set({ type, content });
 
-    // Clear search input field
+    const selectedImage = this.$selectedImage();
+    this.$currentRequest.set({
+      type,
+      content,
+      image: selectedImage || undefined
+    });
+
+    // Clear search input field and image selection
     const inputEl = this.searchInput();
     if (inputEl) {
       inputEl.nativeElement.value = '';
+    }
+
+    const imageInputEl = this.imageInput();
+    if (imageInputEl) {
+      imageInputEl.nativeElement.value = '';
+    }
+
+    this.$selectedImage.set(null);
+  }
+
+  protected onImageSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      this.$selectedImage.set(file);
+    } else {
+      this.$selectedImage.set(null);
     }
   }
 

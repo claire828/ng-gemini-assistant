@@ -50,3 +50,23 @@ export function generateChatContentPayload() {
     ],
   };
 }
+
+export function generateVisionContentPayload(text: string, base64Data: string, mimeType: string) {
+  return {
+    model: environment.geminiModel,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text },
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType
+            }
+          }
+        ]
+      }
+    ]
+  };
+}

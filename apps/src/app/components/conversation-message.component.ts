@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { GeminiType } from 'apps/src/models';
 
 
@@ -31,6 +31,11 @@ import { GeminiType } from 'apps/src/models';
       <!-- User Request -->
       <div class="mb-2 rounded bg-gray-50 p-3">
         <strong>You:</strong> {{ request() }}
+        @if (imageUrl()) {
+          <div class="mt-2">
+            <img [src]="imageUrl()" alt="Uploaded image" class="max-w-xs rounded border" />
+          </div>
+        }
       </div>
 
       <!-- AI Response -->
@@ -42,7 +47,7 @@ import { GeminiType } from 'apps/src/models';
   `,
 })
 export class ConversationMessageComponent {
-  /** The type of conversation (chat, generate, search) */
+  /** The type of conversation (chat, generate, search, vision) */
   type = input.required<GeminiType>();
 
   /** User's request message */
@@ -56,4 +61,13 @@ export class ConversationMessageComponent {
 
   /** Whether this conversation is currently loading */
   isLoading = input<boolean>(false);
+
+  /** Image file for vision conversations */
+  image = input<File | undefined>(undefined);
+
+  /** Computed image URL for display */
+  imageUrl = computed(() => {
+    const imageFile = this.image();
+    return imageFile ? URL.createObjectURL(imageFile) : null;
+  });
 }

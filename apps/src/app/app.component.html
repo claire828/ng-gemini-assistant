@@ -1,28 +1,51 @@
 <div class="flex h-screen flex-col items-center justify-center">
-  <input
-    class="w-100 border border-1 border-blue-500 px-2 text-blue-500"
-    #searchInput
-    type="text"
-    placeholder="Search..."
-  />
-  <div class="m-2 flex justify-center gap-2">
+  <div class="w-full max-w-md space-y-4">
+    <input
+      class="w-full rounded border border-blue-500 px-3 py-2 text-blue-500"
+      #searchInput
+      type="text"
+      placeholder="Enter your message..."
+    />
+
+    <div class="flex items-center space-x-4">
+      <input
+        class="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+        #imageInput
+        type="file"
+        accept="image/*"
+        (change)="onImageSelected($event)"
+      />
+      @if ($selectedImage()) {
+        <span class="text-sm text-green-600">✓ Image selected</span>
+      }
+    </div>
+  </div>
+
+  <div class="m-4 flex justify-center gap-2">
     <button
-      class="rounded bg-blue-500 p-1 hover:bg-blue-600"
-      (click)="sendRequest('generate', searchInput.value)"
+      class="rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600"
+      (click)="sendRequest('content', searchInput.value)"
     >
       Search
     </button>
     <button
-      class="rounded bg-green-500 p-1 hover:bg-green-600"
-      (click)="sendRequest('search', searchInput.value)"
+      class="rounded bg-green-500 px-3 py-2 text-white hover:bg-green-600"
+      (click)="sendRequest('web', searchInput.value)"
     >
       Web Search
     </button>
     <button
-      class="rounded bg-pink-500 p-1 hover:bg-pink-600"
+      class="rounded bg-pink-500 px-3 py-2 text-white hover:bg-pink-600"
       (click)="sendRequest('chat', searchInput.value)"
     >
       Chat
+    </button>
+    <button
+      class="rounded bg-purple-500 px-3 py-2 text-white hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+      (click)="sendRequest('vision', searchInput.value)"
+      [disabled]="!$selectedImage()"
+    >
+      Vision
     </button>
   </div>
 
@@ -40,6 +63,7 @@
         [response]="conversation.response"
         [timestamp]="conversation.timestamp"
         [isLoading]="false"
+        [image]="conversation.image"
       >
       </app-conversation-message>
     }
@@ -54,6 +78,7 @@
           [response]="$aiResource.value() || 'Thinking...'"
           [timestamp]="null"
           [isLoading]="true"
+          [image]="currentRequest.image"
         >
         </app-conversation-message>
       }
