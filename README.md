@@ -24,7 +24,7 @@ A modern Angular application demonstrating integration with Google Gemini AI API
 ## 🛠 Tech Stack
 
 - **Frontend**: Angular 20, TypeScript, RxJS 7
-- **Styling**: Tailwind CSS 3
+- **Styling**: Tailwind CSS 4
 - **Testing**: Jest
 - **Build System**: Nx 21.3.11
 - **AI Integration**: Google Gemini AI API (@google/genai)
