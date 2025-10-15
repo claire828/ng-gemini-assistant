@@ -1,6 +1,12 @@
+# Overview
+
 # NG Gemini Assistant
 
 A modern Angular application demonstrating integration with Google Gemini AI API, featuring custom function calling (tools) and advanced UI interactions.
+
+![Demo-Chat](assets/demo.gif)
+
+![Image Vision](assets/image-vision.gif)
 
 ## 🚀 Features
 
@@ -149,14 +155,6 @@ npm run ng-gemini-assistant
 ```
 
 The application will be available at `http://localhost:4306`
-
-### Build
-
-Build for production:
-
-```bash
-npm run build
-```
 
 ## 📚 Key Concepts Demonstrated
 
